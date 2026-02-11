@@ -24,33 +24,33 @@ import {
   Clock
 } from 'lucide-react';
 
-// --- CONSTANTES GLOBALES (Extraídas del PDF de Luca) ---
+// --- CONSTANTES GLOBALES (Sincronizadas con PDF de Luca) ---
 const NUTRITION_GOALS = { 
   calories: 2600, protein: 200, carbs: 300, fat: 70       
 };
 
 const FOOD_DATABASE = [
   // Desayunos / Meriendas (Opciones exactas del PDF)
-  { id: 'd1', label: 'Opción 1: 4 Tostadas + Queso Untable + 1 Fruta + Leche', calories: 480, protein: 22, carbs: 75, fat: 10, type: 'breakfast' },
+  { id: 'd1', label: 'Opción 1: 4 Tostadas + 4 cdas Queso Untable + 1 Fruta + Leche', calories: 480, protein: 22, carbs: 75, fat: 10, type: 'breakfast' },
   { id: 'd2', label: 'Opción 2: 2 Sándwiches Jamón/Lomo + Veg + 2 Frutas + Leche', calories: 550, protein: 30, carbs: 85, fat: 12, type: 'breakfast' },
   { id: 'd3', label: 'Opción 3: 70g Cereales/Avena + Leche + Whey + 1 Fruta', calories: 510, protein: 35, carbs: 70, fat: 8, type: 'breakfast' },
   { id: 'd4', label: 'Opción 4: Tortilla Avena (80g) + 1 Fruta + Leche + 2 Huevos', calories: 560, protein: 32, carbs: 80, fat: 15, type: 'breakfast' },
   
-  // Hidratos (Almuerzo/Cena - Cantidades en crudo)
+  // Hidratos (Almuerzo/Cena - Cantidades en crudo del PDF)
   { id: 'c1', label: 'Arroz / Fideos / Polenta (120g crudo)', calories: 420, protein: 10, carbs: 90, fat: 2, type: 'carb' },
   { id: 'c2', label: 'Papa o Batata (400g)', calories: 350, protein: 8, carbs: 80, fat: 1, type: 'carb' },
   { id: 'c3', label: 'Legumbres (1.5 latas/cajas)', calories: 340, protein: 18, carbs: 60, fat: 2, type: 'carb' },
-  { id: 'c4', label: 'Choclo en granos (2 latas / 400g)', calories: 360, protein: 10, carbs: 75, fat: 4, type: 'carb' },
+  { id: 'c4', label: 'Choclo en granos (2 latas)', calories: 360, protein: 10, carbs: 75, fat: 4, type: 'carb' },
   { id: 'c5', label: 'Fajitas o Rapiditas (6 unidades)', calories: 450, protein: 12, carbs: 85, fat: 6, type: 'carb' },
   
-  // Proteínas (Almuerzo/Cena - Cantidades en crudo)
+  // Proteínas (Almuerzo/Cena - Cantidades en crudo del PDF)
   { id: 'p1', label: 'Pollo / Pescado Magro (250g crudo)', calories: 280, protein: 55, carbs: 0, fat: 6, type: 'protein' },
-  { id: 'p2', label: 'Carne Roja Magra (Cuadril/Lomo/Nalga) (250g)', calories: 350, protein: 52, carbs: 0, fat: 14, type: 'protein' },
-  { id: 'p3', label: 'Cerdo (Lomo/Solomillo/Carre) (250g)', calories: 320, protein: 48, carbs: 0, fat: 12, type: 'protein' },
+  { id: 'p2', label: 'Carne Roja Magra (250g crudo)', calories: 350, protein: 52, carbs: 0, fat: 14, type: 'protein' },
+  { id: 'p3', label: 'Cerdo (Lomo/Solomillo/Carre) (250g crudo)', calories: 320, protein: 48, carbs: 0, fat: 12, type: 'protein' },
   { id: 'p4', label: 'Atún (1 lata) + 1 Huevo + 2 Claras + Queso', calories: 290, protein: 42, carbs: 5, fat: 10, type: 'protein' },
   
   // Verduras
-  { id: 'v1', label: 'Vegetales Mixtos (Saciedad) (300g)', calories: 100, protein: 4, carbs: 15, fat: 0, type: 'veggie' },
+  { id: 'v1', label: 'Vegetales Mixtos (300g)', calories: 100, protein: 4, carbs: 15, fat: 0, type: 'veggie' },
 ];
 
 const INITIAL_WORKOUT_PLAN = [
@@ -74,7 +74,7 @@ export default function App() {
   const [viewDate, setViewDate] = useState(new Date(2026, 1, 11)); 
   const formatDateKey = (date) => date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-  // Datos Diarios
+  // Registro Diario
   const [dailyLog, setDailyLog] = useState({ desayuno: [], almuerzo: [], merienda: [], cena: [] });
   const [consumed, setConsumed] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
   const [alcoholLog, setAlcoholLog] = useState({ consumed: false, fernet: 0, beer: 0, wine: 0 });
@@ -85,7 +85,7 @@ export default function App() {
   const [history, setHistory] = useState([]);
   const [selectedHistoryDay, setSelectedHistoryDay] = useState(null);
 
-  // Entrenamiento
+  // Rutina
   const [workoutPlan, setWorkoutPlan] = useState(INITIAL_WORKOUT_PLAN); 
   const [currentSessionIndex, setCurrentSessionIndex] = useState(0); 
   const [exercises, setExercises] = useState(INITIAL_WORKOUT_PLAN[0].exercises); 
@@ -112,13 +112,15 @@ export default function App() {
   };
 
   // --- EFECTOS ---
-  // Scroll al inicio al cambiar pestaña
+  
+  // Scroll automático al inicio al cambiar de pestaña
   useEffect(() => {
-    if (mainScrollRef.current) mainScrollRef.current.scrollTop = 0;
-    window.scrollTo(0, 0);
+    if (mainScrollRef.current) {
+      mainScrollRef.current.scrollTop = 0;
+    }
   }, [activeTab]);
 
-  // Recalcular Macros
+  // Cálculo de totales nutricionales
   useEffect(() => {
     let total = { calories: 0, protein: 0, carbs: 0, fat: 0 };
     Object.values(dailyLog).forEach(arr => arr.forEach(f => {
@@ -136,7 +138,8 @@ export default function App() {
     setWorkoutProgress(Math.round((done / exercises.length) * 100));
   }, [exercises]);
 
-  // --- MANEJADORES ---
+  // --- MANEJADORES DE LÓGICA ---
+
   const handleAddFoodToLog = (food) => {
     if (nutritionStatus !== 'active') return;
     setDailyLog(prev => ({ 
@@ -154,16 +157,6 @@ export default function App() {
   const updateAlcohol = (type, delta) => {
     if (nutritionStatus !== 'active') return;
     setAlcoholLog(prev => ({ ...prev, [type]: Math.max(0, prev[type] + delta) }));
-  };
-
-  const handleRestDay = () => {
-    saveHistory('rest');
-    setDailyStatus('rest');
-  };
-
-  const handleFinishWorkout = () => {
-    saveHistory('workout');
-    setDailyStatus('completed');
   };
 
   const saveHistory = useCallback((eventType) => {
@@ -190,6 +183,16 @@ export default function App() {
   const handleFinishNutritionDay = () => {
     saveHistory('nutrition_update');
     setNutritionStatus('completed');
+  };
+
+  const handleFinishWorkout = () => {
+    saveHistory('workout');
+    setDailyStatus('completed');
+  };
+
+  const handleRestDay = () => {
+    saveHistory('rest');
+    setDailyStatus('rest');
   };
 
   const toggleExercise = (id) => {
@@ -250,7 +253,8 @@ export default function App() {
     const csvContent = "Semana,Dia,Ejercicio,Series,Repeticiones,Pausa\n1,1,Press Banca,4,8,90s";
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'plantilla.csv'; a.click();
+    const a = document.createElement('a');
+    a.href = url; a.download = 'plantilla.csv'; a.click();
   };
 
   const selectedDayData = useMemo(() => {
@@ -278,15 +282,15 @@ export default function App() {
     <div className="min-h-screen bg-gray-100 flex flex-col items-center">
       <div className="max-w-md w-full h-screen bg-white shadow-2xl overflow-hidden flex flex-col relative">
         
-        {/* CONTENEDOR SCROLLABLE */}
-        <main ref={mainScrollRef} className="flex-1 overflow-y-auto p-6 pb-24 bg-white relative scroll-smooth">
+        {/* CONTENEDOR SCROLLABLE (flex-1 permite que ocupe todo el espacio sobrante) */}
+        <main ref={mainScrollRef} className="flex-1 overflow-y-auto p-6 bg-white relative scroll-smooth">
           
           {/* HOME */}
           {activeTab === 'home' && (
             <div className="space-y-8 animate-in fade-in duration-500">
               <header className="flex justify-between items-center">
-                <div className="text-left">
-                  <h1 className="text-2xl font-black text-gray-800 tracking-tight">Luca 👋</h1>
+                <div className="text-left text-gray-800">
+                  <h1 className="text-2xl font-black tracking-tight">Luca 👋</h1>
                   <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">{formatDateKey(currentDate)}</p>
                 </div>
                 <div className="h-12 w-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-black shadow-lg">LM</div>
@@ -324,8 +328,9 @@ export default function App() {
           {/* NUTRICIÓN */}
           {activeTab === 'nutrition' && (
             <div className="space-y-6 relative animate-in fade-in duration-500">
+              {/* CAPA DE BLOQUEO (REFORZADA) */}
               {nutritionStatus === 'completed' && (
-                <div className="absolute inset-0 z-[10] bg-white/95 backdrop-blur-[4px] flex flex-col items-center justify-center p-8 text-center rounded-3xl border-2 border-emerald-100 h-full">
+                <div className="absolute inset-0 z-[10] bg-white/95 backdrop-blur-[4px] flex flex-col items-center justify-center p-8 text-center rounded-3xl border-2 border-emerald-100 h-full min-h-[500px]">
                   <div className="bg-emerald-500 p-6 rounded-full mb-6 text-white shadow-2xl animate-bounce"><Lock size={56} /></div>
                   <h2 className="text-2xl font-black text-gray-800 tracking-tight">Día Cerrado</h2>
                   <p className="text-sm text-gray-400 font-bold mb-8">El registro ha sido enviado al historial.</p>
@@ -333,8 +338,8 @@ export default function App() {
                 </div>
               )}
 
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-black text-gray-800 tracking-tight">Nutrición</h2>
+              <div className="flex justify-between items-center text-gray-800">
+                <h2 className="text-2xl font-black tracking-tight">Nutrición</h2>
                 <button onClick={() => {setImportType('nutrition'); setShowImportModal(true);}} className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl hover:bg-indigo-100 transition-colors"><Upload size={20} /></button>
               </div>
 
@@ -358,7 +363,7 @@ export default function App() {
                     {dailyLog[meal].map(item => (
                       <div key={item.logId} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 mb-2 shadow-sm">
                         <div className="text-left"><p className="font-bold text-xs text-gray-700">{item.label}</p><p className="text-[9px] text-gray-400 font-bold uppercase mt-0.5">{item.calories} kcal</p></div>
-                        <Trash2 size={16} className="text-gray-300 hover:text-red-500 cursor-pointer" onClick={() => removeFoodFromLog(meal, item.logId)} />
+                        <button onClick={() => removeFoodFromLog(meal, item.logId)} className="text-gray-300 hover:text-red-500 p-1 transition-colors"><Trash2 size={16} /></button>
                       </div>
                     ))}
                     <button onClick={() => { setSelectedMealType(meal); setShowAddMealModal(true); }} className="w-full py-3 text-[10px] text-indigo-600 font-black border-2 border-indigo-50 rounded-2xl bg-white hover:bg-indigo-50 transition-all uppercase tracking-widest">+ Registrar</button>
@@ -384,20 +389,20 @@ export default function App() {
             </div>
           )}
 
-          {/* VISTA ENTRENAMIENTO */}
+          {/* RUTINA */}
           {activeTab === 'workout' && (
             <div className="space-y-6 relative animate-in fade-in duration-500">
               {dailyStatus !== 'active' && (
                 <div className="absolute inset-0 z-[10] bg-white/95 backdrop-blur-[6px] flex flex-col items-center justify-center p-8 text-center rounded-[2rem] border-2 border-emerald-100 h-full">
-                  <div className="bg-emerald-500 p-6 rounded-full mb-6 text-white animate-bounce shadow-2xl"><Trophy size={56} /></div>
+                  <div className="bg-emerald-500 p-6 rounded-full mb-6 text-white shadow-2xl animate-bounce"><Trophy size={56} /></div>
                   <h2 className="text-3xl font-black text-gray-800 tracking-tight">¡Logrado!</h2>
-                  <button onClick={simulateNextDay} className="bg-indigo-600 text-white px-12 py-4 rounded-[2rem] font-black text-xs uppercase shadow-xl tracking-widest">Siguiente Día</button>
+                  <button onClick={simulateNextDay} className="bg-indigo-600 text-white px-12 py-4 rounded-[2rem] font-black text-xs uppercase shadow-xl tracking-widest active:scale-95 transition-all">Siguiente Día</button>
                 </div>
               )}
 
-              <div className="flex justify-between items-center text-left">
+              <div className="flex justify-between items-center text-left text-gray-800">
                 <div>
-                  <h2 className="text-2xl font-black text-gray-800 tracking-tight">Entrenamiento</h2>
+                  <h2 className="text-2xl font-black tracking-tight">Entrenamiento</h2>
                   <p className="text-xs font-bold text-indigo-600 uppercase tracking-[0.2em] mt-1">
                     Semana {workoutPlan[currentSessionIndex]?.week || '1'} — Día {workoutPlan[currentSessionIndex]?.day || '1'}
                   </p>
@@ -421,7 +426,7 @@ export default function App() {
                     {!ex.completed && (
                       <div className="mt-5 pt-5 border-t border-gray-50 flex items-center justify-between">
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Carga hoy:</span>
-                        <div className="flex items-center space-x-3"><input type="number" placeholder="0" value={ex.weight} onChange={(e) => updateWeight(ex.id, e.target.value)} className="w-24 border-none bg-gray-100 p-3 rounded-2xl text-center text-sm font-black text-gray-800 focus:ring-4 focus:ring-indigo-100 outline-none shadow-inner" /><span className="text-xs font-black text-gray-300 uppercase">kg</span></div>
+                        <div className="flex items-center space-x-3 text-gray-800"><input type="number" placeholder="0" value={ex.weight} onChange={(e) => updateWeight(ex.id, e.target.value)} className="w-24 border-none bg-gray-100 p-3 rounded-2xl text-center text-sm font-black focus:ring-4 focus:ring-indigo-100 outline-none shadow-inner" /><span className="text-xs font-black text-gray-300 uppercase">kg</span></div>
                       </div>
                     )}
                   </div>
@@ -439,7 +444,7 @@ export default function App() {
           {activeTab === 'calendar' && (
             <div className="space-y-6 animate-in fade-in duration-500 text-left">
               <header>
-                <h2 className="text-2xl font-black text-gray-800 tracking-tight">Historial</h2>
+                <h2 className="text-2xl font-black text-gray-800 tracking-tight text-left">Historial</h2>
                 <div className="flex justify-between items-center bg-gray-100 p-2.5 rounded-[1.5rem] mt-5">
                   <button onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth()-1)))} className="p-2 hover:bg-white rounded-xl transition-all shadow-sm"><ChevronLeft size={22} className="text-gray-400"/></button>
                   <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-600">{viewDate.toLocaleDateString('es-ES', {month:'short', year:'numeric'})}</p>
@@ -448,7 +453,7 @@ export default function App() {
               </header>
 
               <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 p-6">
-                <div className="grid grid-cols-7 gap-1 mb-4 text-center text-[9px] font-black text-gray-300 tracking-[0.3em]">{['L','M','X','J','V','S','D'].map(d => <div key={d}>{d}</div>)}</div>
+                <div className="grid grid-cols-7 gap-1 mb-4 text-center text-[9px] font-black text-gray-300 tracking-[0.3em] uppercase">{['L','M','X','J','V','S','D'].map(d => <div key={d}>{d}</div>)}</div>
                 <div className="grid grid-cols-7 gap-3">
                   {getDaysInMonth(viewDate).map((date, i) => {
                     if(!date) return <div key={i}/>;
@@ -477,7 +482,7 @@ export default function App() {
 
               {selectedDayData ? (
                 <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm animate-in slide-in-from-bottom-6 duration-500 text-left">
-                   <header className="mb-6"><p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{selectedDayData.dateStr}</p><h3 className="text-xl font-black text-gray-800 tracking-tight">Resumen Diario</h3></header>
+                   <header className="mb-6"><p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{selectedDayData.dateStr}</p><h3 className="text-xl font-black text-gray-800 tracking-tight">Detalle del Día</h3></header>
                    <div className="flex space-x-2 bg-gray-100 p-1.5 rounded-2xl mb-6">
                     <button onClick={() => setDetailTab('nutrition')} className={`flex-1 py-3 rounded-xl text-xs font-black transition-all uppercase tracking-widest ${detailTab === 'nutrition' ? 'bg-white text-indigo-600 shadow-md' : 'text-gray-400'}`}>Comidas</button>
                     <button onClick={() => setDetailTab('workout')} className={`flex-1 py-3 rounded-xl text-xs font-black transition-all uppercase tracking-widest ${detailTab === 'workout' ? 'bg-white text-indigo-600 shadow-md' : 'text-gray-400'}`}>Rutina</button>
@@ -486,7 +491,7 @@ export default function App() {
                   {detailTab === 'nutrition' ? (
                     <div className="space-y-6">
                       <div className="flex justify-between items-center border-b border-gray-50 pb-5 text-left">
-                         <div><p className="text-[10px] text-gray-300 font-black uppercase tracking-widest mb-1">Total</p><p className="text-2xl font-black text-gray-800">{selectedDayData.calories} kcal</p></div>
+                         <div><p className="text-[10px] text-gray-300 font-black uppercase tracking-widest mb-1">Consumo Total</p><p className="text-2xl font-black text-gray-800">{selectedDayData.calories} kcal</p></div>
                          <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600 shadow-inner"><PieChart size={22} /></div>
                       </div>
                       
@@ -510,7 +515,7 @@ export default function App() {
                           return (
                             <div key={meal} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-left">
                               <h5 className="text-[9px] font-black text-gray-400 uppercase mb-2 tracking-[0.1em] text-left">{meal}</h5>
-                              {items.map((it, idx) => (<div key={idx} className="flex justify-between items-center text-xs py-2 border-b border-white last:border-0 text-left"><span className="font-bold text-gray-700 flex-1 text-left">{it.label}</span><span className="font-black text-gray-400 ml-2">{it.calories}</span></div>))}
+                              {items.map((it, idx) => (<div key={idx} className="flex justify-between items-center text-xs py-2 border-b border-white last:border-0 text-left text-gray-700"><span className="font-bold flex-1 text-left">{it.label}</span><span className="font-black text-gray-400 ml-2">{it.calories}</span></div>))}
                             </div>
                           );
                         })}
@@ -518,14 +523,9 @@ export default function App() {
                     </div>
                   ) : (
                     <div className="space-y-4 text-left">
-                      <div className="flex justify-between items-center mb-2"><span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Estado Final:</span><span className="text-xs font-black px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full uppercase tracking-tighter">{getStatusLabel(selectedDayData.status)}</span></div>
+                      <div className="flex justify-between items-center mb-2"><span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Resultado Final:</span><span className="text-xs font-black px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full uppercase tracking-tighter">{getStatusLabel(selectedDayData.status)}</span></div>
                       <div className="divide-y divide-gray-100">
-                        {selectedDayData.details?.map((ex, idx) => (
-                          <div key={idx} className="flex justify-between items-center py-4 text-xs font-black text-gray-700 tracking-tight text-left">
-                            <span>{ex.name}</span>
-                            <span className="text-indigo-600">{ex.weight || '-'} kg</span>
-                          </div>
-                        ))}
+                        {selectedDayData.details?.map((ex, idx) => (<div key={idx} className="flex justify-between items-center py-4 text-xs font-black text-gray-700 tracking-tight text-left text-gray-800"><span>{ex.name}</span><span className="text-indigo-600">{ex.weight || '-'} kg</span></div>))}
                       </div>
                     </div>
                   )}
@@ -533,7 +533,7 @@ export default function App() {
               ) : selectedHistoryDay && (
                 <div className="p-12 text-center bg-gray-50 rounded-[2.5rem] border border-dashed border-gray-200">
                   <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em]">{formatDateKey(selectedHistoryDay)}</p>
-                  <p className="text-xs text-gray-400 mt-1 font-black uppercase">Sin registros</p>
+                  <p className="text-xs text-gray-400 mt-1 font-black uppercase tracking-widest">Sin registros registrados</p>
                 </div>
               )}
             </div>
@@ -541,7 +541,7 @@ export default function App() {
         </main>
 
         {/* NAVEGACIÓN INFERIOR (Z-INDEX ALTO Y POSICIONAMIENTO FIJO REAL) */}
-        <nav className="bg-white/95 backdrop-blur-2xl border-t border-gray-100 flex justify-around items-center px-4 py-6 z-[100] rounded-t-[2.5rem] shadow-2xl">
+        <nav className="bg-white/95 backdrop-blur-2xl border-t border-gray-100 flex justify-around items-center px-4 py-6 z-[100] rounded-t-[2.5rem] shadow-2xl shrink-0">
           <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center space-y-1 transition-all duration-300 transform ${activeTab === 'home' ? 'text-indigo-600 scale-125' : 'text-gray-300'}`}>
             <Home size={22} strokeWidth={3}/><span className="text-[8px] font-black uppercase tracking-widest">Inicio</span>
           </button>
@@ -556,11 +556,11 @@ export default function App() {
           </button>
         </nav>
 
-        {/* MODAL PARA AGREGAR COMIDA */}
+        {/* MODAL COMIDA */}
         {showAddMealModal && (
           <div className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300 text-left">
             <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[80vh]">
-              <div className="flex justify-between items-center mb-8 shrink-0"><h3 className="text-xl font-black text-gray-800 capitalize tracking-tight">Registrar {selectedMealType}</h3><button onClick={() => setShowAddMealModal(false)} className="text-gray-300 hover:text-gray-900"><XCircle size={32} /></button></div>
+              <div className="flex justify-between items-center mb-8 shrink-0"><h3 className="text-xl font-black text-gray-800 capitalize tracking-tight">Registrar {selectedMealType}</h3><button onClick={() => setShowAddMealModal(false)} className="text-gray-300 hover:text-gray-900 transition-colors"><XCircle size={32} /></button></div>
               <div className="space-y-4 overflow-y-auto pr-2">
                 <div className="grid grid-cols-2 gap-2">
                    <button onClick={() => {
@@ -574,7 +574,7 @@ export default function App() {
                      const newItem = { logId: Date.now(), label: 'Comida fuera del plan', calories: parseInt(cal) || 800, protein: 0, carbs: 0, fat: 0, type: 'cheat' };
                      setDailyLog(prev => ({ ...prev, [selectedMealType]: [...prev[selectedMealType], newItem] }));
                      setShowAddMealModal(false);
-                   }} className="p-3 bg-red-50 text-red-600 text-[10px] font-black rounded-xl uppercase tracking-widest active:bg-red-100 shadow-sm text-center">Comida fuera del plan</button>
+                   }} className="p-3 bg-red-50 text-red-600 text-[10px] font-black rounded-xl uppercase tracking-widest active:bg-red-100 shadow-sm text-center tracking-tighter">Comida fuera del plan</button>
                 </div>
                 <div className="h-px bg-gray-100 my-6" />
                 {FOOD_DATABASE
@@ -590,7 +590,7 @@ export default function App() {
           </div>
         )}
 
-        {/* MODAL PARA IMPORTAR RUTINA */}
+        {/* MODAL IMPORTAR */}
         {showImportModal && (
           <div className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-md flex items-center justify-center p-8 animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-xs rounded-[3rem] p-10 text-center shadow-2xl animate-in zoom-in-95 duration-300">
