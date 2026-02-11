@@ -13,44 +13,35 @@ import {
   CalendarDays,
   Upload,
   Download,
-  Coffee,
-  Sun,
   PieChart,
   Trash2,
   Wine,
   XCircle,
   Lock,
-  ArrowRight,
+  Sun,
   Clock
 } from 'lucide-react';
 
-// --- CONSTANTES GLOBALES (Sincronizadas con PDF de Luca) ---
+// --- CONSTANTES GLOBALES (Sincronizadas con PDF) ---
 const NUTRITION_GOALS = { 
   calories: 2600, protein: 200, carbs: 300, fat: 70       
 };
 
 const FOOD_DATABASE = [
-  // Desayunos / Meriendas (Opciones exactas del PDF)
-  { id: 'd1', label: 'Opción 1: 4 Tostadas + 4 cdas Queso Untable + 1 Fruta + Leche', calories: 480, protein: 22, carbs: 75, fat: 10, type: 'breakfast' },
+  { id: 'd1', label: 'Opción 1: 4 Tostadas + Queso Untable + 1 Fruta + Leche', calories: 480, protein: 22, carbs: 75, fat: 10, type: 'breakfast' },
   { id: 'd2', label: 'Opción 2: 2 Sándwiches Jamón/Lomo + Veg + 2 Frutas + Leche', calories: 550, protein: 30, carbs: 85, fat: 12, type: 'breakfast' },
   { id: 'd3', label: 'Opción 3: 70g Cereales/Avena + Leche + Whey + 1 Fruta', calories: 510, protein: 35, carbs: 70, fat: 8, type: 'breakfast' },
   { id: 'd4', label: 'Opción 4: Tortilla Avena (80g) + 1 Fruta + Leche + 2 Huevos', calories: 560, protein: 32, carbs: 80, fat: 15, type: 'breakfast' },
-  
-  // Hidratos (Almuerzo/Cena - Cantidades en crudo del PDF)
   { id: 'c1', label: 'Arroz / Fideos / Polenta (120g crudo)', calories: 420, protein: 10, carbs: 90, fat: 2, type: 'carb' },
   { id: 'c2', label: 'Papa o Batata (400g)', calories: 350, protein: 8, carbs: 80, fat: 1, type: 'carb' },
   { id: 'c3', label: 'Legumbres (1.5 latas/cajas)', calories: 340, protein: 18, carbs: 60, fat: 2, type: 'carb' },
   { id: 'c4', label: 'Choclo en granos (2 latas)', calories: 360, protein: 10, carbs: 75, fat: 4, type: 'carb' },
   { id: 'c5', label: 'Fajitas o Rapiditas (6 unidades)', calories: 450, protein: 12, carbs: 85, fat: 6, type: 'carb' },
-  
-  // Proteínas (Almuerzo/Cena - Cantidades en crudo del PDF)
   { id: 'p1', label: 'Pollo / Pescado Magro (250g crudo)', calories: 280, protein: 55, carbs: 0, fat: 6, type: 'protein' },
   { id: 'p2', label: 'Carne Roja Magra (250g crudo)', calories: 350, protein: 52, carbs: 0, fat: 14, type: 'protein' },
-  { id: 'p3', label: 'Cerdo (Lomo/Solomillo/Carre) (250g crudo)', calories: 320, protein: 48, carbs: 0, fat: 12, type: 'protein' },
+  { id: 'p3', label: 'Cerdo (Lomo/Solomillo) (250g crudo)', calories: 320, protein: 48, carbs: 0, fat: 12, type: 'protein' },
   { id: 'p4', label: 'Atún (1 lata) + 1 Huevo + 2 Claras + Queso', calories: 290, protein: 42, carbs: 5, fat: 10, type: 'protein' },
-  
-  // Verduras
-  { id: 'v1', label: 'Vegetales Mixtos (300g)', calories: 100, protein: 4, carbs: 15, fat: 0, type: 'veggie' },
+  { id: 'v1', label: 'Vegetales Mixtos (Saciedad) (300g)', calories: 100, protein: 4, carbs: 15, fat: 0, type: 'veggie' },
 ];
 
 const INITIAL_WORKOUT_PLAN = [
@@ -60,67 +51,39 @@ const INITIAL_WORKOUT_PLAN = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
-  const mainScrollRef = useRef(null);
+  const scrollRef = useRef(null);
 
-  // --- ESTADOS ---
   const [showAddMealModal, setShowAddMealModal] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState('desayuno'); 
   const [showImportModal, setShowImportModal] = useState(false);
   const [importType, setImportType] = useState(null); 
   const [detailTab, setDetailTab] = useState('nutrition');
 
-  // Tiempo
   const [currentDate, setCurrentDate] = useState(new Date(2026, 1, 11)); 
   const [viewDate, setViewDate] = useState(new Date(2026, 1, 11)); 
   const formatDateKey = (date) => date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-  // Registro Diario
   const [dailyLog, setDailyLog] = useState({ desayuno: [], almuerzo: [], merienda: [], cena: [] });
   const [consumed, setConsumed] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
   const [alcoholLog, setAlcoholLog] = useState({ consumed: false, fernet: 0, beer: 0, wine: 0 });
   const [dailyStatus, setDailyStatus] = useState('active'); 
   const [nutritionStatus, setNutritionStatus] = useState('active');
   
-  // Historial
   const [history, setHistory] = useState([]);
   const [selectedHistoryDay, setSelectedHistoryDay] = useState(null);
 
-  // Rutina
   const [workoutPlan, setWorkoutPlan] = useState(INITIAL_WORKOUT_PLAN); 
   const [currentSessionIndex, setCurrentSessionIndex] = useState(0); 
   const [exercises, setExercises] = useState(INITIAL_WORKOUT_PLAN[0].exercises); 
   const [workoutProgress, setWorkoutProgress] = useState(0);
 
-  // --- FUNCIONES AUXILIARES ---
-  const getStatusLabel = (status) => {
-    if (status === 'perfect') return 'COMPLETADO';
-    if (status === 'good') return 'INCOMPLETO';
-    if (status === 'rest') return 'DESCANSO';
-    return 'SIN DATOS';
-  };
-
-  const getDaysInMonth = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const lastDay = new Date(year, month + 1, 0).getDate();
-    const firstDayIndex = new Date(year, month, 1).getDay(); 
-    const startOffset = firstDayIndex === 0 ? 6 : firstDayIndex - 1; 
-    const days = [];
-    for (let i = 0; i < startOffset; i++) days.push(null);
-    for (let i = 1; i <= lastDay; i++) days.push(new Date(year, month, i));
-    return days;
-  };
-
-  // --- EFECTOS ---
-  
-  // Scroll automático al inicio al cambiar de pestaña
+  // --- NAVEGACIÓN Y SCROLL ---
   useEffect(() => {
-    if (mainScrollRef.current) {
-      mainScrollRef.current.scrollTop = 0;
-    }
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    window.scrollTo(0, 0);
   }, [activeTab]);
 
-  // Cálculo de totales nutricionales
+  // --- CÁLCULOS ---
   useEffect(() => {
     let total = { calories: 0, protein: 0, carbs: 0, fat: 0 };
     Object.values(dailyLog).forEach(arr => arr.forEach(f => {
@@ -138,8 +101,7 @@ export default function App() {
     setWorkoutProgress(Math.round((done / exercises.length) * 100));
   }, [exercises]);
 
-  // --- MANEJADORES DE LÓGICA ---
-
+  // --- MANEJADORES ---
   const handleAddFoodToLog = (food) => {
     if (nutritionStatus !== 'active') return;
     setDailyLog(prev => ({ 
@@ -253,14 +215,25 @@ export default function App() {
     const csvContent = "Semana,Dia,Ejercicio,Series,Repeticiones,Pausa\n1,1,Press Banca,4,8,90s";
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'plantilla.csv'; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = 'plantilla.csv'; a.click();
   };
 
   const selectedDayData = useMemo(() => {
     if (!selectedHistoryDay) return null;
     return history.find(h => h.dateStr === formatDateKey(selectedHistoryDay));
   }, [selectedHistoryDay, history]);
+
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    const firstDayIndex = new Date(year, month, 1).getDay(); 
+    const startOffset = firstDayIndex === 0 ? 6 : firstDayIndex - 1; 
+    const days = [];
+    for (let i = 0; i < startOffset; i++) days.push(null);
+    for (let i = 1; i <= lastDay; i++) days.push(new Date(year, month, i));
+    return days;
+  };
 
   // --- RENDER HELPERS ---
   const renderProgressBar = (cur, max, color, label) => {
@@ -280,10 +253,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center">
-      <div className="max-w-md w-full h-screen bg-white shadow-2xl overflow-hidden flex flex-col relative">
+      <div className="max-w-md w-full h-screen bg-white shadow-2xl overflow-hidden flex flex-col relative border-x border-gray-200">
         
-        {/* CONTENEDOR SCROLLABLE (flex-1 permite que ocupe todo el espacio sobrante) */}
-        <main ref={mainScrollRef} className="flex-1 overflow-y-auto p-6 bg-white relative scroll-smooth">
+        {/* CONTENEDOR SCROLLABLE */}
+        <main ref={scrollRef} className="flex-1 overflow-y-auto p-6 bg-white relative scroll-smooth">
           
           {/* HOME */}
           {activeTab === 'home' && (
@@ -328,7 +301,6 @@ export default function App() {
           {/* NUTRICIÓN */}
           {activeTab === 'nutrition' && (
             <div className="space-y-6 relative animate-in fade-in duration-500">
-              {/* CAPA DE BLOQUEO (REFORZADA) */}
               {nutritionStatus === 'completed' && (
                 <div className="absolute inset-0 z-[10] bg-white/95 backdrop-blur-[4px] flex flex-col items-center justify-center p-8 text-center rounded-3xl border-2 border-emerald-100 h-full min-h-[500px]">
                   <div className="bg-emerald-500 p-6 rounded-full mb-6 text-white shadow-2xl animate-bounce"><Lock size={56} /></div>
@@ -363,7 +335,7 @@ export default function App() {
                     {dailyLog[meal].map(item => (
                       <div key={item.logId} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 mb-2 shadow-sm">
                         <div className="text-left"><p className="font-bold text-xs text-gray-700">{item.label}</p><p className="text-[9px] text-gray-400 font-bold uppercase mt-0.5">{item.calories} kcal</p></div>
-                        <button onClick={() => removeFoodFromLog(meal, item.logId)} className="text-gray-300 hover:text-red-500 p-1 transition-colors"><Trash2 size={16} /></button>
+                        <Trash2 size={16} className="text-gray-300 hover:text-red-500 cursor-pointer" onClick={() => removeFoodFromLog(meal, item.logId)} />
                       </div>
                     ))}
                     <button onClick={() => { setSelectedMealType(meal); setShowAddMealModal(true); }} className="w-full py-3 text-[10px] text-indigo-600 font-black border-2 border-indigo-50 rounded-2xl bg-white hover:bg-indigo-50 transition-all uppercase tracking-widest">+ Registrar</button>
@@ -389,14 +361,14 @@ export default function App() {
             </div>
           )}
 
-          {/* RUTINA */}
+          {/* ENTRENAMIENTO */}
           {activeTab === 'workout' && (
             <div className="space-y-6 relative animate-in fade-in duration-500">
               {dailyStatus !== 'active' && (
                 <div className="absolute inset-0 z-[10] bg-white/95 backdrop-blur-[6px] flex flex-col items-center justify-center p-8 text-center rounded-[2rem] border-2 border-emerald-100 h-full">
-                  <div className="bg-emerald-500 p-6 rounded-full mb-6 text-white shadow-2xl animate-bounce"><Trophy size={56} /></div>
+                  <div className="bg-emerald-500 p-6 rounded-full mb-6 text-white animate-bounce shadow-2xl"><Trophy size={56} /></div>
                   <h2 className="text-3xl font-black text-gray-800 tracking-tight">¡Logrado!</h2>
-                  <button onClick={simulateNextDay} className="bg-indigo-600 text-white px-12 py-4 rounded-[2rem] font-black text-xs uppercase shadow-xl tracking-widest active:scale-95 transition-all">Siguiente Día</button>
+                  <button onClick={simulateNextDay} className="bg-indigo-600 text-white px-12 py-4 rounded-[2rem] font-black text-xs uppercase shadow-xl">Siguiente Día</button>
                 </div>
               )}
 
@@ -462,7 +434,7 @@ export default function App() {
                     const isSelected = selectedHistoryDay && formatDateKey(selectedHistoryDay) === dateStr;
                     const isToday = dateStr === formatDateKey(currentDate);
                     
-                    let bgStyle = 'bg-gray-50 text-gray-400';
+                    let bgStyle = 'bg-gray-50 text-gray-700';
                     if (h) {
                       if (h.type === 'rest') bgStyle = 'bg-orange-100 text-orange-600 font-black';
                       else if (h.status === 'perfect') bgStyle = 'bg-emerald-100 text-emerald-600 font-black';
@@ -490,8 +462,8 @@ export default function App() {
                   
                   {detailTab === 'nutrition' ? (
                     <div className="space-y-6">
-                      <div className="flex justify-between items-center border-b border-gray-50 pb-5 text-left">
-                         <div><p className="text-[10px] text-gray-300 font-black uppercase tracking-widest mb-1">Consumo Total</p><p className="text-2xl font-black text-gray-800">{selectedDayData.calories} kcal</p></div>
+                      <div className="flex justify-between items-center border-b border-gray-50 pb-5 text-left text-gray-800">
+                         <div><p className="text-[10px] text-gray-300 font-black uppercase tracking-widest mb-1">Consumo Total</p><p className="text-2xl font-black">{selectedDayData.calories} kcal</p></div>
                          <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600 shadow-inner"><PieChart size={22} /></div>
                       </div>
                       
@@ -533,14 +505,14 @@ export default function App() {
               ) : selectedHistoryDay && (
                 <div className="p-12 text-center bg-gray-50 rounded-[2.5rem] border border-dashed border-gray-200">
                   <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em]">{formatDateKey(selectedHistoryDay)}</p>
-                  <p className="text-xs text-gray-400 mt-1 font-black uppercase tracking-widest">Sin registros registrados</p>
+                  <p className="text-xs text-gray-400 mt-1 font-black uppercase tracking-widest text-center">Sin registros registrados</p>
                 </div>
               )}
             </div>
           )}
         </main>
 
-        {/* NAVEGACIÓN INFERIOR (Z-INDEX ALTO Y POSICIONAMIENTO FIJO REAL) */}
+        {/* NAVEGACIÓN INFERIOR (COMPLETAMENTE FIJA) */}
         <nav className="bg-white/95 backdrop-blur-2xl border-t border-gray-100 flex justify-around items-center px-4 py-6 z-[100] rounded-t-[2.5rem] shadow-2xl shrink-0">
           <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center space-y-1 transition-all duration-300 transform ${activeTab === 'home' ? 'text-indigo-600 scale-125' : 'text-gray-300'}`}>
             <Home size={22} strokeWidth={3}/><span className="text-[8px] font-black uppercase tracking-widest">Inicio</span>
@@ -581,7 +553,7 @@ export default function App() {
                   .filter(food => (selectedMealType === 'desayuno' || selectedMealType === 'merienda') ? food.type === 'breakfast' : (food.type === 'protein' || food.type === 'carb' || food.type === 'veggie'))
                   .map(food => (
                     <button key={food.id} onClick={() => handleAddFoodToLog(food)} className="w-full text-left p-5 border border-gray-50 rounded-[1.5rem] text-sm font-bold flex justify-between items-center hover:bg-indigo-50 transition-all text-gray-800 shadow-sm active:bg-indigo-100">
-                      <div className="flex-1 text-left"><p className="tracking-tight">{food.label}</p><p className="text-[10px] text-gray-300 font-black uppercase mt-1 tracking-widest">{food.calories} kcal • P:{food.protein}g C:{food.carbs}g</p></div>
+                      <div className="flex-1 text-left"><p className="tracking-tight font-bold">{food.label}</p><p className="text-[10px] text-gray-300 font-black uppercase mt-1 tracking-widest">{food.calories} kcal • P:{food.protein}g C:{food.carbs}g</p></div>
                       <div className="bg-indigo-50 p-2 rounded-xl text-indigo-600"><Plus size={16} strokeWidth={3} /></div>
                     </button>
                   ))}
