@@ -24,15 +24,15 @@ import {
   Clock
 } from 'lucide-react';
 
-// --- CONSTANTES GLOBALES (Sincronizadas con PDF de Luca) ---
+// --- CONSTANTES GLOBALES (Extraídas del PDF de Luca) ---
 const NUTRITION_GOALS = { 
   calories: 2600, protein: 200, carbs: 300, fat: 70       
 };
 
 const FOOD_DATABASE = [
   // Desayunos / Meriendas (Opciones exactas del PDF)
-  { id: 'd1', label: 'Opción 1: 4 Tostadas + 4 cdas Queso Untable + 1 Fruta + Leche', calories: 480, protein: 22, carbs: 75, fat: 10, type: 'breakfast' },
-  { id: 'd2', label: 'Opción 2: 2 Sandwich Jamón/Lomo + Veg + 2 Frutas + Leche', calories: 550, protein: 30, carbs: 85, fat: 12, type: 'breakfast' },
+  { id: 'd1', label: 'Opción 1: 4 Tostadas + Queso Untable + 1 Fruta + Leche', calories: 480, protein: 22, carbs: 75, fat: 10, type: 'breakfast' },
+  { id: 'd2', label: 'Opción 2: 2 Sándwiches Jamón/Lomo + Veg + 2 Frutas + Leche', calories: 550, protein: 30, carbs: 85, fat: 12, type: 'breakfast' },
   { id: 'd3', label: 'Opción 3: 70g Cereales/Avena + Leche + Whey + 1 Fruta', calories: 510, protein: 35, carbs: 70, fat: 8, type: 'breakfast' },
   { id: 'd4', label: 'Opción 4: Tortilla Avena (80g) + 1 Fruta + Leche + 2 Huevos', calories: 560, protein: 32, carbs: 80, fat: 15, type: 'breakfast' },
   
@@ -40,17 +40,17 @@ const FOOD_DATABASE = [
   { id: 'c1', label: 'Arroz / Fideos / Polenta (120g crudo)', calories: 420, protein: 10, carbs: 90, fat: 2, type: 'carb' },
   { id: 'c2', label: 'Papa o Batata (400g)', calories: 350, protein: 8, carbs: 80, fat: 1, type: 'carb' },
   { id: 'c3', label: 'Legumbres (1.5 latas/cajas)', calories: 340, protein: 18, carbs: 60, fat: 2, type: 'carb' },
-  { id: 'c4', label: 'Choclo en granos (2 latas)', calories: 360, protein: 10, carbs: 75, fat: 4, type: 'carb' },
+  { id: 'c4', label: 'Choclo en granos (2 latas / 400g)', calories: 360, protein: 10, carbs: 75, fat: 4, type: 'carb' },
   { id: 'c5', label: 'Fajitas o Rapiditas (6 unidades)', calories: 450, protein: 12, carbs: 85, fat: 6, type: 'carb' },
   
   // Proteínas (Almuerzo/Cena - Cantidades en crudo)
   { id: 'p1', label: 'Pollo / Pescado Magro (250g crudo)', calories: 280, protein: 55, carbs: 0, fat: 6, type: 'protein' },
-  { id: 'p2', label: 'Carne Roja Magra (250g crudo)', calories: 350, protein: 52, carbs: 0, fat: 14, type: 'protein' },
-  { id: 'p3', label: 'Cerdo (Lomo/Solomillo/Carre) (250g crudo)', calories: 320, protein: 48, carbs: 0, fat: 12, type: 'protein' },
+  { id: 'p2', label: 'Carne Roja Magra (Cuadril/Lomo/Nalga) (250g)', calories: 350, protein: 52, carbs: 0, fat: 14, type: 'protein' },
+  { id: 'p3', label: 'Cerdo (Lomo/Solomillo/Carre) (250g)', calories: 320, protein: 48, carbs: 0, fat: 12, type: 'protein' },
   { id: 'p4', label: 'Atún (1 lata) + 1 Huevo + 2 Claras + Queso', calories: 290, protein: 42, carbs: 5, fat: 10, type: 'protein' },
   
   // Verduras
-  { id: 'v1', label: 'Vegetales Mixtos (300g)', calories: 100, protein: 4, carbs: 15, fat: 0, type: 'veggie' },
+  { id: 'v1', label: 'Vegetales Mixtos (Saciedad) (300g)', calories: 100, protein: 4, carbs: 15, fat: 0, type: 'veggie' },
 ];
 
 const INITIAL_WORKOUT_PLAN = [
@@ -60,7 +60,7 @@ const INITIAL_WORKOUT_PLAN = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
-  const scrollContainerRef = useRef(null);
+  const mainScrollRef = useRef(null);
 
   // --- ESTADOS ---
   const [showAddMealModal, setShowAddMealModal] = useState(false);
@@ -112,12 +112,9 @@ export default function App() {
   };
 
   // --- EFECTOS ---
-  
-  // Scroll automático al inicio al cambiar de pestaña
+  // Scroll al inicio al cambiar pestaña
   useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = 0;
-    }
+    if (mainScrollRef.current) mainScrollRef.current.scrollTop = 0;
     window.scrollTo(0, 0);
   }, [activeTab]);
 
@@ -140,7 +137,6 @@ export default function App() {
   }, [exercises]);
 
   // --- MANEJADORES ---
-
   const handleAddFoodToLog = (food) => {
     if (nutritionStatus !== 'active') return;
     setDailyLog(prev => ({ 
@@ -158,6 +154,16 @@ export default function App() {
   const updateAlcohol = (type, delta) => {
     if (nutritionStatus !== 'active') return;
     setAlcoholLog(prev => ({ ...prev, [type]: Math.max(0, prev[type] + delta) }));
+  };
+
+  const handleRestDay = () => {
+    saveHistory('rest');
+    setDailyStatus('rest');
+  };
+
+  const handleFinishWorkout = () => {
+    saveHistory('workout');
+    setDailyStatus('completed');
   };
 
   const saveHistory = useCallback((eventType) => {
@@ -184,16 +190,6 @@ export default function App() {
   const handleFinishNutritionDay = () => {
     saveHistory('nutrition_update');
     setNutritionStatus('completed');
-  };
-
-  const handleFinishWorkout = () => {
-    saveHistory('workout');
-    setDailyStatus('completed');
-  };
-
-  const handleRestDay = () => {
-    saveHistory('rest');
-    setDailyStatus('rest');
   };
 
   const toggleExercise = (id) => {
@@ -283,7 +279,7 @@ export default function App() {
       <div className="max-w-md w-full h-screen bg-white shadow-2xl overflow-hidden flex flex-col relative">
         
         {/* CONTENEDOR SCROLLABLE */}
-        <main ref={scrollContainerRef} className="flex-1 overflow-y-auto p-6 pb-24 bg-white relative scroll-smooth">
+        <main ref={mainScrollRef} className="flex-1 overflow-y-auto p-6 pb-24 bg-white relative scroll-smooth">
           
           {/* HOME */}
           {activeTab === 'home' && (
@@ -388,14 +384,14 @@ export default function App() {
             </div>
           )}
 
-          {/* ENTRENAMIENTO */}
+          {/* VISTA ENTRENAMIENTO */}
           {activeTab === 'workout' && (
             <div className="space-y-6 relative animate-in fade-in duration-500">
               {dailyStatus !== 'active' && (
                 <div className="absolute inset-0 z-[10] bg-white/95 backdrop-blur-[6px] flex flex-col items-center justify-center p-8 text-center rounded-[2rem] border-2 border-emerald-100 h-full">
                   <div className="bg-emerald-500 p-6 rounded-full mb-6 text-white animate-bounce shadow-2xl"><Trophy size={56} /></div>
                   <h2 className="text-3xl font-black text-gray-800 tracking-tight">¡Logrado!</h2>
-                  <button onClick={simulateNextDay} className="bg-indigo-600 text-white px-12 py-4 rounded-[2rem] font-black text-xs uppercase shadow-xl tracking-widest active:scale-95 transition-all">Siguiente Día</button>
+                  <button onClick={simulateNextDay} className="bg-indigo-600 text-white px-12 py-4 rounded-[2rem] font-black text-xs uppercase shadow-xl tracking-widest">Siguiente Día</button>
                 </div>
               )}
 
@@ -489,7 +485,7 @@ export default function App() {
                   
                   {detailTab === 'nutrition' ? (
                     <div className="space-y-6">
-                      <div className="flex justify-between items-center border-b border-gray-50 pb-5">
+                      <div className="flex justify-between items-center border-b border-gray-50 pb-5 text-left">
                          <div><p className="text-[10px] text-gray-300 font-black uppercase tracking-widest mb-1">Total</p><p className="text-2xl font-black text-gray-800">{selectedDayData.calories} kcal</p></div>
                          <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600 shadow-inner"><PieChart size={22} /></div>
                       </div>
@@ -512,9 +508,9 @@ export default function App() {
                           const items = selectedDayData.nutritionLog[meal];
                           if (items.length === 0) return null;
                           return (
-                            <div key={meal} className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                              <h5 className="text-[9px] font-black text-gray-400 uppercase mb-2 tracking-[0.1em]">{meal}</h5>
-                              {items.map((it, idx) => (<div key={idx} className="flex justify-between items-center text-xs py-2 border-b border-white last:border-0"><span className="font-bold text-gray-700 flex-1 text-left">{it.label}</span><span className="font-black text-gray-400 ml-2">{it.calories}</span></div>))}
+                            <div key={meal} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-left">
+                              <h5 className="text-[9px] font-black text-gray-400 uppercase mb-2 tracking-[0.1em] text-left">{meal}</h5>
+                              {items.map((it, idx) => (<div key={idx} className="flex justify-between items-center text-xs py-2 border-b border-white last:border-0 text-left"><span className="font-bold text-gray-700 flex-1 text-left">{it.label}</span><span className="font-black text-gray-400 ml-2">{it.calories}</span></div>))}
                             </div>
                           );
                         })}
@@ -524,7 +520,12 @@ export default function App() {
                     <div className="space-y-4 text-left">
                       <div className="flex justify-between items-center mb-2"><span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Estado Final:</span><span className="text-xs font-black px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full uppercase tracking-tighter">{getStatusLabel(selectedDayData.status)}</span></div>
                       <div className="divide-y divide-gray-100">
-                        {selectedDayData.details?.map((ex, idx) => (<div key={idx} className="flex justify-between items-center py-4 text-xs font-black text-gray-700 tracking-tight text-left"><span>{ex.name}</span><span className="text-indigo-600">{ex.weight || '-'} kg</span></div>))}
+                        {selectedDayData.details?.map((ex, idx) => (
+                          <div key={idx} className="flex justify-between items-center py-4 text-xs font-black text-gray-700 tracking-tight text-left">
+                            <span>{ex.name}</span>
+                            <span className="text-indigo-600">{ex.weight || '-'} kg</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -539,7 +540,7 @@ export default function App() {
           )}
         </main>
 
-        {/* NAVEGACIÓN INFERIOR (Z-INDEX ALTO) */}
+        {/* NAVEGACIÓN INFERIOR (Z-INDEX ALTO Y POSICIONAMIENTO FIJO REAL) */}
         <nav className="bg-white/95 backdrop-blur-2xl border-t border-gray-100 flex justify-around items-center px-4 py-6 z-[100] rounded-t-[2.5rem] shadow-2xl">
           <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center space-y-1 transition-all duration-300 transform ${activeTab === 'home' ? 'text-indigo-600 scale-125' : 'text-gray-300'}`}>
             <Home size={22} strokeWidth={3}/><span className="text-[8px] font-black uppercase tracking-widest">Inicio</span>
@@ -555,12 +556,12 @@ export default function App() {
           </button>
         </nav>
 
-        {/* MODALES */}
+        {/* MODAL PARA AGREGAR COMIDA */}
         {showAddMealModal && (
           <div className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300 text-left">
-            <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
-              <div className="flex justify-between items-center mb-8"><h3 className="text-xl font-black text-gray-800 capitalize tracking-tight">Registrar {selectedMealType}</h3><button onClick={() => setShowAddMealModal(false)} className="text-gray-300 hover:text-gray-900"><XCircle size={32} /></button></div>
-              <div className="space-y-4 max-h-[450px] overflow-y-auto pr-2">
+            <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[80vh]">
+              <div className="flex justify-between items-center mb-8 shrink-0"><h3 className="text-xl font-black text-gray-800 capitalize tracking-tight">Registrar {selectedMealType}</h3><button onClick={() => setShowAddMealModal(false)} className="text-gray-300 hover:text-gray-900"><XCircle size={32} /></button></div>
+              <div className="space-y-4 overflow-y-auto pr-2">
                 <div className="grid grid-cols-2 gap-2">
                    <button onClick={() => {
                      const newItem = { logId: Date.now(), label: 'Comida Salteada', calories: 0, protein: 0, carbs: 0, fat: 0, type: 'skipped' };
@@ -589,6 +590,7 @@ export default function App() {
           </div>
         )}
 
+        {/* MODAL PARA IMPORTAR RUTINA */}
         {showImportModal && (
           <div className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-md flex items-center justify-center p-8 animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-xs rounded-[3rem] p-10 text-center shadow-2xl animate-in zoom-in-95 duration-300">
