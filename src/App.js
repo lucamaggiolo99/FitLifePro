@@ -12,7 +12,6 @@ import {
   Activity,
   CalendarDays,
   Upload,
-  Download,
   PieChart,
   Trash2,
   Wine,
@@ -32,18 +31,18 @@ const NUTRITION_GOALS = {
 const FOOD_DATABASE = [
   // Desayunos / Meriendas (Opciones exactas del PDF)
   { id: 'd1', label: 'Opción 1: 4 Tostadas + Queso Untable + 1 Fruta + Leche', calories: 480, protein: 22, carbs: 75, fat: 10, type: 'breakfast' },
-  { id: 'd2', label: 'Opción 2: 2 Sándwiches Jamón/Lomo + Veg + 2 Frutas + Leche', calories: 550, protein: 30, carbs: 85, fat: 12, type: 'breakfast' },
+  { id: 'd2', label: 'Opción 2: 2 Sandwich Jamón/Lomo + Veg + 2 Frutas + Leche', calories: 550, protein: 30, carbs: 85, fat: 12, type: 'breakfast' },
   { id: 'd3', label: 'Opción 3: 70g Cereales/Avena + Leche + Whey + 1 Fruta', calories: 510, protein: 35, carbs: 70, fat: 8, type: 'breakfast' },
   { id: 'd4', label: 'Opción 4: Tortilla Avena (80g) + 1 Fruta + Leche + 2 Huevos', calories: 560, protein: 32, carbs: 80, fat: 15, type: 'breakfast' },
   
-  // Hidratos (Almuerzo/Cena - Cantidades en crudo del PDF)
+  // Hidratos (Cantidades en crudo)
   { id: 'c1', label: 'Arroz / Fideos / Polenta (120g crudo)', calories: 420, protein: 10, carbs: 90, fat: 2, type: 'carb' },
   { id: 'c2', label: 'Papa o Batata (400g)', calories: 350, protein: 8, carbs: 80, fat: 1, type: 'carb' },
   { id: 'c3', label: 'Legumbres (1.5 latas/cajas)', calories: 340, protein: 18, carbs: 60, fat: 2, type: 'carb' },
-  { id: 'c4', label: 'Choclo en granos (2 latas)', calories: 360, protein: 10, carbs: 75, fat: 4, type: 'carb' },
+  { id: 'c4', label: 'Choclo en granos (2 latas / 400g)', calories: 360, protein: 10, carbs: 75, fat: 4, type: 'carb' },
   { id: 'c5', label: 'Fajitas o Rapiditas (6 unidades)', calories: 450, protein: 12, carbs: 85, fat: 6, type: 'carb' },
   
-  // Proteínas (Almuerzo/Cena - Cantidades en crudo del PDF)
+  // Proteínas
   { id: 'p1', label: 'Pollo / Pescado Magro (250g crudo)', calories: 280, protein: 55, carbs: 0, fat: 6, type: 'protein' },
   { id: 'p2', label: 'Carne Roja Magra (250g crudo)', calories: 350, protein: 52, carbs: 0, fat: 14, type: 'protein' },
   { id: 'p3', label: 'Cerdo (Lomo/Solomillo/Carre) (250g crudo)', calories: 320, protein: 48, carbs: 0, fat: 12, type: 'protein' },
@@ -60,13 +59,12 @@ const INITIAL_WORKOUT_PLAN = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
-  const scrollContainerRef = useRef(null);
+  const mainScrollRef = useRef(null);
 
   // --- ESTADOS ---
   const [showAddMealModal, setShowAddMealModal] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState('desayuno'); 
   const [showImportModal, setShowImportModal] = useState(false);
-  const [importType, setImportType] = useState(null); 
   const [detailTab, setDetailTab] = useState('nutrition');
 
   // Tiempo
@@ -77,7 +75,7 @@ export default function App() {
     return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
-  // Registro Diario
+  // Datos Diarios
   const [dailyLog, setDailyLog] = useState({ desayuno: [], almuerzo: [], merienda: [], cena: [] });
   const [consumed, setConsumed] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
   const [alcoholLog, setAlcoholLog] = useState({ consumed: false, fernet: 0, beer: 0, wine: 0 });
@@ -88,7 +86,7 @@ export default function App() {
   const [history, setHistory] = useState([]);
   const [selectedHistoryDay, setSelectedHistoryDay] = useState(null);
 
-  // Rutina
+  // Entrenamiento
   const [workoutPlan, setWorkoutPlan] = useState(INITIAL_WORKOUT_PLAN); 
   const [currentSessionIndex, setCurrentSessionIndex] = useState(0); 
   const [exercises, setExercises] = useState(INITIAL_WORKOUT_PLAN[0].exercises); 
@@ -116,7 +114,7 @@ export default function App() {
 
   // --- EFECTOS ---
   useEffect(() => {
-    if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
+    if (mainScrollRef.current) mainScrollRef.current.scrollTop = 0;
     window.scrollTo(0, 0);
   }, [activeTab]);
 
@@ -271,7 +269,7 @@ export default function App() {
       <div className="max-w-md w-full h-screen bg-white shadow-2xl overflow-hidden flex flex-col relative border-x border-gray-200">
         
         {/* CONTENEDOR SCROLLABLE */}
-        <main ref={scrollContainerRef} className="flex-1 overflow-y-auto p-6 bg-white relative scroll-smooth">
+        <main ref={mainScrollRef} className="flex-1 overflow-y-auto p-6 bg-white relative scroll-smooth">
           
           {/* HOME */}
           {activeTab === 'home' && (
@@ -327,7 +325,7 @@ export default function App() {
 
               <div className="flex justify-between items-center text-gray-800">
                 <h2 className="text-2xl font-black tracking-tight">Nutrición</h2>
-                <button onClick={() => {setImportType('nutrition'); setShowImportModal(true);}} className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl hover:bg-indigo-100 transition-colors"><Upload size={20} /></button>
+                <button onClick={() => {setShowImportModal(true);}} className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl hover:bg-indigo-100 transition-colors"><Upload size={20} /></button>
               </div>
 
               <div className="p-6 rounded-[2rem] border border-indigo-100 bg-white shadow-sm">
@@ -336,7 +334,7 @@ export default function App() {
                   <div className="text-xs font-black bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-full">{Math.round((consumed.calories / NUTRITION_GOALS.calories) * 100)}%</div>
                 </div>
                 {renderProgressBar(consumed.protein, NUTRITION_GOALS.protein, "bg-indigo-500", "Proteína")}
-                {renderProgressBar(consumed.carbs, NUTRITION_GOALS.carbs, "bg-emerald-500", "Hidratos")}
+                {renderProgressBar(consumed.carbs, NUTRITION_GOALS.carbs, "bg-emerald-500", "Carbohidratos")}
                 {renderProgressBar(consumed.fat, NUTRITION_GOALS.fat, "bg-orange-500", "Grasas")}
               </div>
 
@@ -348,8 +346,8 @@ export default function App() {
                   </div>
                   <div className="p-4 rounded-[2rem] border border-dashed border-gray-200 bg-gray-50/50 flex flex-col justify-center">
                     {dailyLog[meal].map(item => (
-                      <div key={item.logId} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 mb-2 shadow-sm text-left">
-                        <div className="flex-1"><p className="font-bold text-xs text-gray-700">{item.label}</p><p className="text-[9px] text-gray-400 font-bold uppercase mt-0.5">{item.calories} kcal</p></div>
+                      <div key={item.logId} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 mb-2 shadow-sm text-left text-gray-700">
+                        <div className="flex-1"><p className="font-bold text-xs">{item.label}</p><p className="text-[9px] text-gray-400 font-bold uppercase mt-0.5">{item.calories} kcal</p></div>
                         <Trash2 size={16} className="text-gray-300 hover:text-red-500 cursor-pointer ml-2" onClick={() => removeFoodFromLog(meal, item.logId)} />
                       </div>
                     ))}
@@ -360,11 +358,11 @@ export default function App() {
 
               <div className={`p-6 rounded-[2rem] border border-gray-100 bg-white shadow-sm transition-all ${alcoholLog.consumed ? 'bg-purple-50 border-purple-100' : ''}`}>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center text-left"><Wine size={18} className={`mr-2 ${alcoholLog.consumed ? 'text-purple-600' : 'text-gray-400'}`} /><span className="text-xs font-black text-gray-600 uppercase tracking-tighter">¿Hubo alcohol hoy?</span></div>
+                  <div className="flex items-center text-left text-gray-800"><Wine size={18} className={`mr-2 ${alcoholLog.consumed ? 'text-purple-600' : 'text-gray-400'}`} /><span className="text-xs font-black uppercase tracking-tighter">¿Hubo alcohol hoy?</span></div>
                   <button onClick={() => setAlcoholLog(p => ({...p, consumed: !p.consumed}))} className={`w-12 h-6 rounded-full relative transition-all duration-500 ${alcoholLog.consumed ? 'bg-purple-600' : 'bg-gray-200'}`}><div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300 ${alcoholLog.consumed ? 'left-7' : 'left-1'}`} /></button>
                 </div>
                 {alcoholLog.consumed && (
-                  <div className="grid grid-cols-3 gap-4 mt-6 animate-in zoom-in-95 text-center">
+                  <div className="grid grid-cols-3 gap-4 mt-6 animate-in zoom-in-95 text-center text-gray-800">
                     {['fernet', 'beer', 'wine'].map(d => (
                       <div key={d}><span className="text-[9px] font-black text-gray-400 capitalize mb-1 block">{d === 'beer' ? 'Birra' : d}</span><div className="flex items-center justify-center space-x-2 bg-white rounded-xl border border-purple-100 p-1 shadow-sm"><button onClick={() => updateAlcohol(d, -1)} className="w-6 h-6 bg-gray-50 rounded-lg text-xs font-black">-</button><span className="font-black text-xs w-4">{alcoholLog[d]}</span><button onClick={() => updateAlcohol(d, 1)} className="w-6 h-6 bg-purple-100 text-purple-600 rounded-lg text-xs font-black">+</button></div></div>
                     ))}
@@ -378,22 +376,22 @@ export default function App() {
 
           {/* RUTINA */}
           {activeTab === 'workout' && (
-            <div className="space-y-6 relative animate-in fade-in duration-500">
+            <div className="space-y-6 relative animate-in fade-in duration-500 text-left">
               {dailyStatus !== 'active' && (
                 <div className="absolute inset-0 z-[10] bg-white/95 backdrop-blur-[6px] flex flex-col items-center justify-center p-8 text-center rounded-[2rem] border-2 border-emerald-100 h-full min-h-[500px]">
                   <div className="bg-emerald-500 p-6 rounded-full mb-6 text-white shadow-2xl animate-bounce"><Trophy size={56} /></div>
                   <h2 className="text-3xl font-black text-gray-800 tracking-tight">¡Logrado!</h2>
-                  <button onClick={simulateNextDay} className="bg-indigo-600 text-white px-12 py-4 rounded-[2rem] font-black text-xs uppercase shadow-xl">Siguiente Día</button>
+                  <button onClick={simulateNextDay} className="bg-indigo-600 text-white px-12 py-4 rounded-[2rem] font-black text-xs uppercase shadow-xl tracking-widest">Siguiente Día</button>
                 </div>
               )}
-              <div className="flex justify-between items-center text-left text-gray-800">
+              <div className="flex justify-between items-center text-gray-800">
                 <div><h2 className="text-2xl font-black tracking-tight">Entrenamiento</h2><p className="text-xs font-bold text-indigo-600 uppercase tracking-[0.2em] mt-1">Semana {workoutPlan[currentSessionIndex]?.week || '1'} — Día {workoutPlan[currentSessionIndex]?.day || '1'}</p></div>
-                <button onClick={() => {setImportType('workout'); setShowImportModal(true);}} className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl hover:bg-indigo-100 transition-colors"><Upload size={20} /></button>
+                <button onClick={() => {setShowImportModal(true);}} className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl hover:bg-indigo-100 transition-colors"><Upload size={20} /></button>
               </div>
               <div className="space-y-5">
                 {exercises.map(ex => (
                   <div key={ex.id} className={`p-6 rounded-[2.5rem] border transition-all duration-300 ${ex.completed ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-gray-100 shadow-sm'}`}>
-                    <div className="flex justify-between items-start cursor-pointer text-left" onClick={() => toggleExercise(ex.id)}>
+                    <div className="flex justify-between items-start cursor-pointer flex-1" onClick={() => toggleExercise(ex.id)}>
                       <div className="flex space-x-5 text-gray-800 flex-1">
                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black ${ex.completed ? 'bg-emerald-200 text-emerald-700 shadow-inner' : 'bg-gray-100 text-gray-400'}`}>{ex.sets.split('x')[0]}</div>
                         <div className="flex-1">
@@ -404,9 +402,9 @@ export default function App() {
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${ex.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-100 bg-gray-50'}`}>{ex.completed ? <CheckCircle2 size={18} /> : <div className="w-2 h-2 rounded-full bg-white shadow-sm" />}</div>
                     </div>
                     {!ex.completed && (
-                      <div className="mt-5 pt-5 border-t border-gray-50 flex items-center justify-between">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Carga hoy:</span>
-                        <div className="flex items-center space-x-3 text-gray-800"><input type="number" placeholder="0" value={ex.weight} onChange={(e) => updateWeight(ex.id, e.target.value)} className="w-24 border-none bg-gray-100 p-3 rounded-2xl text-center text-sm font-black focus:ring-4 focus:ring-indigo-100 outline-none shadow-inner" /><span className="text-xs font-black text-gray-300 uppercase">kg</span></div>
+                      <div className="mt-5 pt-5 border-t border-gray-50 flex items-center justify-between text-gray-800">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Carga hoy:</span>
+                        <div className="flex items-center space-x-3"><input type="number" placeholder="0" value={ex.weight} onChange={(e) => updateWeight(ex.id, e.target.value)} className="w-24 border-none bg-gray-100 p-3 rounded-2xl text-center text-sm font-black focus:ring-4 focus:ring-indigo-100 outline-none shadow-inner" /><span className="text-xs font-black uppercase">kg</span></div>
                       </div>
                     )}
                   </div>
@@ -422,7 +420,7 @@ export default function App() {
           {/* HISTORIAL */}
           {activeTab === 'calendar' && (
             <div className="space-y-6 animate-in fade-in duration-500 text-left">
-              <header><h2 className="text-2xl font-black text-gray-800 tracking-tight text-left">Historial</h2><div className="flex justify-between items-center bg-gray-100 p-2.5 rounded-[1.5rem] mt-5"><button onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))} className="p-2 hover:bg-white rounded-xl transition-all shadow-sm"><ChevronLeft size={22} className="text-gray-400"/></button><p className="text-xs font-black uppercase tracking-[0.2em] text-gray-600">{viewDate.toLocaleDateString('es-ES', {month:'short', year:'numeric'})}</p><button onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))} className="p-2 hover:bg-white rounded-xl transition-all shadow-sm"><ChevronRight size={22} className="text-gray-400"/></button></div></header>
+              <header><h2 className="text-2xl font-black text-gray-800 tracking-tight text-left text-gray-800">Historial</h2><div className="flex justify-between items-center bg-gray-100 p-2.5 rounded-[1.5rem] mt-5"><button onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))} className="p-2 hover:bg-white rounded-xl transition-all shadow-sm"><ChevronLeft size={22} className="text-gray-400"/></button><p className="text-xs font-black uppercase tracking-[0.2em] text-gray-600">{viewDate.toLocaleDateString('es-ES', {month:'short', year:'numeric'})}</p><button onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))} className="p-2 hover:bg-white rounded-xl transition-all shadow-sm"><ChevronRight size={22} className="text-gray-400"/></button></div></header>
               <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 p-6">
                 <div className="grid grid-cols-7 gap-1 mb-4 text-center text-[9px] font-black text-gray-300 tracking-[0.3em] uppercase">{['L','M','X','J','V','S','D'].map(d => <div key={d}>{d}</div>)}</div>
                 <div className="grid grid-cols-7 gap-3">
@@ -445,7 +443,7 @@ export default function App() {
               </div>
               {selectedDayData ? (
                 <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm animate-in slide-in-from-bottom-6 duration-500 text-left">
-                   <header className="mb-6"><p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{selectedDayData.dateStr}</p><h3 className="text-xl font-black text-gray-800 tracking-tight">Detalle del Día</h3></header>
+                   <header className="mb-6"><p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{selectedDayData.dateStr}</p><h3 className="text-xl font-black text-gray-800 tracking-tight text-left">Detalle del Día</h3></header>
                    <div className="flex space-x-2 bg-gray-100 p-1.5 rounded-2xl mb-6 text-center"><button onClick={() => setDetailTab('nutrition')} className={`flex-1 py-3 rounded-xl text-xs font-black transition-all uppercase tracking-widest ${detailTab === 'nutrition' ? 'bg-white text-indigo-600 shadow-md' : 'text-gray-400'}`}>Comidas</button><button onClick={() => setDetailTab('workout')} className={`flex-1 py-3 rounded-xl text-xs font-black transition-all uppercase tracking-widest ${detailTab === 'workout' ? 'bg-white text-indigo-600 shadow-md' : 'text-gray-400'}`}>Rutina</button></div>
                   {detailTab === 'nutrition' ? (
                     <div className="space-y-6">
@@ -453,19 +451,19 @@ export default function App() {
                       {selectedDayData.alcohol ? (
                         <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100 shadow-sm"><p className="text-[10px] font-black text-purple-400 uppercase mb-3 flex items-center text-left"><Wine size={12} className="mr-1"/> Alcohol registrado</p><div className="flex flex-wrap gap-2 text-left">{Object.entries(selectedDayData.alcohol).map(([k, v]) => (k !== 'consumed' && Number(v) > 0) ? (<span key={k} className="px-3 py-1 bg-white text-purple-600 text-[10px] font-black rounded-full shadow-sm uppercase">{v} {k === 'beer' ? 'Birras' : k}</span>) : null)}</div></div>
                       ) : (
-                        <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-100 flex items-center text-left"><Wine size={12} className="text-emerald-400 mr-2"/><p className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">Sin alcohol registrado</p></div>
+                        <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-100 flex items-center text-left text-emerald-600"><Wine size={12} className="mr-2"/><p className="text-[10px] font-black uppercase tracking-tighter">Sin alcohol registrado</p></div>
                       )}
-                      <div className="space-y-4 text-left">{Object.keys(selectedDayData.nutritionLog).map(meal => { const items = selectedDayData.nutritionLog[meal]; if (items.length === 0) return null; return (<div key={meal} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-left"><h5 className="text-[9px] font-black text-gray-400 uppercase mb-2 tracking-[0.1em] text-left">{meal}</h5>{items.map((it, idx) => (<div key={idx} className="flex justify-between items-center text-xs py-2 border-b border-white last:border-0 text-left text-gray-700"><span className="font-bold flex-1 text-left">{it.label}</span><span className="font-black text-gray-400 ml-2">{it.calories}</span></div>))}</div>);})}</div>
+                      <div className="space-y-4 text-left">{Object.keys(selectedDayData.nutritionLog).map(meal => { const items = selectedDayData.nutritionLog[meal]; if (items.length === 0) return null; return (<div key={meal} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-left text-gray-800"><h5 className="text-[9px] font-black text-gray-400 uppercase mb-2 tracking-[0.1em] text-left">{meal}</h5>{items.map((it, idx) => (<div key={idx} className="flex justify-between items-center text-xs py-2 border-b border-white last:border-0 text-left text-gray-700"><span className="font-bold flex-1 text-left">{it.label}</span><span className="font-black text-gray-400 ml-2">{it.calories}</span></div>))}</div>);})}</div>
                     </div>
                   ) : (
                     <div className="space-y-4 text-left">
-                      <div className="flex justify-between items-center mb-2 text-left"><span className="text-[10px] font-black text-gray-300 uppercase tracking-widest text-left">Resultado Final:</span><span className="text-xs font-black px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full uppercase tracking-tighter text-left">{getStatusLabel(selectedDayData.status)}</span></div>
-                      <div className="divide-y divide-gray-100">{selectedDayData.details?.map((ex, idx) => (<div key={idx} className="flex justify-between items-center py-4 text-xs font-black text-gray-700 tracking-tight text-left text-gray-800 flex-1"><span>{ex.name}</span><span className="text-indigo-600 ml-2">{ex.weight || '-'} kg</span></div>))}</div>
+                      <div className="flex justify-between items-center mb-2 text-left text-gray-800"><span className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-left">Resultado:</span><span className="text-xs font-black px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full uppercase tracking-tighter text-left">{getStatusLabel(selectedDayData.status)}</span></div>
+                      <div className="divide-y divide-gray-100 text-gray-800">{selectedDayData.details?.map((ex, idx) => (<div key={idx} className="flex justify-between items-center py-4 text-xs font-black tracking-tight text-left text-gray-700 flex-1"><span>{ex.name}</span><span className="text-indigo-600 ml-2 shrink-0">{ex.weight || '-'} kg</span></div>))}</div>
                     </div>
                   )}
                 </div>
               ) : selectedHistoryDay && (
-                <div className="p-12 text-center bg-gray-50 rounded-[2.5rem] border border-dashed border-gray-200"><p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em]">{formatDateKey(selectedHistoryDay)}</p><p className="text-xs text-gray-400 mt-1 font-black uppercase tracking-widest text-center">Sin registros</p></div>
+                <div className="p-12 text-center bg-gray-50 rounded-[2.5rem] border border-dashed border-gray-200"><p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] text-center">{formatDateKey(selectedHistoryDay)}</p><p className="text-xs text-gray-400 mt-1 font-black uppercase tracking-widest text-center">Sin registros</p></div>
               )}
             </div>
           )}
@@ -491,7 +489,7 @@ export default function App() {
         {showAddMealModal && (
           <div className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300 text-left">
             <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[80vh]">
-              <div className="flex justify-between items-center mb-8 shrink-0 text-gray-800"><h3 className="text-xl font-black capitalize tracking-tight">Registrar {selectedMealType}</h3><button onClick={() => setShowAddMealModal(false)} className="text-gray-300 hover:text-gray-900 transition-colors"><XCircle size={32} /></button></div>
+              <div className="flex justify-between items-center mb-8 shrink-0 text-gray-800"><h3 className="text-xl font-black capitalize tracking-tight text-left">Registrar {selectedMealType}</h3><button onClick={() => setShowAddMealModal(false)} className="text-gray-300 hover:text-gray-900 transition-colors"><XCircle size={32} /></button></div>
               <div className="space-y-4 overflow-y-auto pr-2 scrollbar-hide text-left">
                 <div className="grid grid-cols-2 gap-2 text-left">
                    <button onClick={() => {
@@ -512,8 +510,8 @@ export default function App() {
                   .filter(food => (selectedMealType === 'desayuno' || selectedMealType === 'merienda') ? food.type === 'breakfast' : (food.type === 'protein' || food.type === 'carb' || food.type === 'veggie'))
                   .map(food => (
                     <button key={food.id} onClick={() => handleAddFoodToLog(food)} className="w-full text-left p-5 border border-gray-50 rounded-[1.5rem] text-sm font-bold flex justify-between items-center hover:bg-indigo-50 transition-all text-gray-800 shadow-sm active:bg-indigo-100 text-left">
-                      <div className="flex-1 text-left"><p className="tracking-tight font-bold">{food.label}</p><p className="text-[10px] text-gray-300 font-black uppercase mt-1 tracking-widest">{food.calories} kcal • P:{food.protein}g C:{food.carbs}g</p></div>
-                      <div className="bg-indigo-50 p-2 rounded-xl text-indigo-600 ml-2"><Plus size={16} strokeWidth={3} /></div>
+                      <div className="flex-1 text-left text-gray-800"><p className="tracking-tight font-bold">{food.label}</p><p className="text-[10px] text-gray-300 font-black uppercase mt-1 tracking-widest">{food.calories} kcal • P:{food.protein}g C:{food.carbs}g</p></div>
+                      <div className="bg-indigo-50 p-2 rounded-xl text-indigo-600 ml-2 shrink-0 flex items-center justify-center"><Plus size={16} strokeWidth={3} /></div>
                     </button>
                   ))}
               </div>
